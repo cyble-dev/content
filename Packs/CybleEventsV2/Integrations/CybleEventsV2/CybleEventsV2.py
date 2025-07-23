@@ -1388,7 +1388,6 @@ def main():
     proxy = params.get("proxy", False)
     hide_cvv_expiry = params.get("hide_data", False)
     demisto.debug(f"Command being called is {params}")
-    mirror = params.get("mirror", False)
     incident_collections = params.get("incident_collections", [])
     incident_severity = params.get("incident_severity", [])
 
