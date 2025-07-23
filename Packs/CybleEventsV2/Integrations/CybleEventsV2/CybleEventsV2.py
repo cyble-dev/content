@@ -858,6 +858,67 @@ def get_alert_by_id(client, alert_id, token, url):
         raise DemistoException(f"[get_alert_by_id] Error during HTTP request: {str(e)}")
 
 
+def update_alert_data_command(client: Client, url: str, token: str, args: Dict[str, Any]) -> CommandResults:
+    """
+    Update alert data (status/severity) on Cyble Vision platform for one or more alerts.
+    """
+    demisto.debug(f"[update_alert_data_command] Raw args: {args}")
+
+    ids = argToList(args.get("ids"))
+    statuses = argToList(args.get("status")) if args.get("status") else []
+    severities = argToList(args.get("severity")) if args.get("severity") else []
+
+    demisto.debug(f"[update_alert_data_command] Parsed ids: {ids}")
+    demisto.debug(f"[update_alert_data_command] Parsed statuses: {statuses}")
+    demisto.debug(f"[update_alert_data_command] Parsed severities: {severities}")
+
+    if not statuses and not severities:
+        raise DemistoException("At least one of 'status' or 'severity' must be provided.")
+
+    if statuses and len(statuses) not in [1, len(ids)]:
+        raise DemistoException("Number of statuses must be 1 or equal to the number of ids.")
+    if severities and len(severities) not in [1, len(ids)]:
+        raise DemistoException("Number of severities must be 1 or equal to the number of ids.")
+
+    alerts_payload = []
+
+    for idx, alert_id in enumerate(ids):
+        demisto.debug(f"[update_alert_data_command] Processing alert ID: {alert_id}")
+
+        alert = get_alert_by_id(client, alert_id, token, url)
+        if not alert:
+            demisto.debug(f"Alert ID {alert_id} not found. Skipping.")
+            continue
+
+        alert_payload = {"id": alert_id, "service": alert.get("service")}
+
+        if statuses:
+            alert_payload["status"] = statuses[0] if len(statuses) == 1 else statuses[idx]
+        if severities:
+            alert_payload["user_severity"] = severities[0] if len(severities) == 1 else severities[idx]
+
+        demisto.debug(f"[update_alert_data_command] Payload for alert ID {alert_id}: {alert_payload}")
+
+        alerts_payload.append(alert_payload)
+
+    if not alerts_payload:
+        raise DemistoException("No valid alerts found to update.")
+
+    payload = {"alerts": alerts_payload}
+    update_url = url + "/y/tpi/cortex/alerts"
+
+    demisto.debug(f"[update_alert_data_command] Final Payload: {payload}")
+
+    client.update_alert(payload, update_url, token)
+
+    return CommandResults(
+        readable_output=f"✅ Updated {len(alerts_payload)} alert(s) successfully.",
+        outputs_prefix="CybleEvents.AlertUpdate",
+        outputs_key_field="id",
+        outputs=alerts_payload,
+    )
+
+
 def get_fetch_severities(incident_severity):
     """
     Determines the list of severities to fetch based on provided incident severities.
@@ -1350,11 +1411,8 @@ def main():
             demisto.setLastRun(next_run)
             demisto.incidents(data)
 
-        elif demisto.command() == "update-remote-system":
-            if mirror:
-                url = base_url + str(ROUTES[COMMAND[demisto.command()]])
-                return_results(update_remote_system(client, "PUT", token, args, url))
-            return
+        elif demisto.command() == "update-alert-data":
+            return_results(update_alert_data_command(client, base_url, token, args))
 
         elif demisto.command() == "get-mapping-fields":
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
@@ -1390,6 +1448,9 @@ def main():
                     client, url, token, args, hide_cvv_expiry, incident_collections, incident_severity
                 )
             )
+        elif demisto.command() == "update-alert-data":
+            url = base_url + "/y/tpi/cortex/alerts"
+            return_results(update_alert_data_command(client, url, token, args))
 
         elif demisto.command() == "get-remote-data":
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
