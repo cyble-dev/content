@@ -1398,7 +1398,7 @@ def main():
         if demisto.command() == "test-module":
             demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
-            return_results(test_response(client, "GET", url, token))
+            return_results(test_response(client, "POST", url, token))
 
         elif demisto.command() == "fetch-incidents":
             last_run = demisto.getLastRun()
