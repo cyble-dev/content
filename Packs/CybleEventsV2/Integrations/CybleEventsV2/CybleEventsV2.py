@@ -1387,7 +1387,7 @@ def main():
     verify_certificate = not params.get("insecure", False)
     proxy = params.get("proxy", False)
     hide_cvv_expiry = params.get("hide_data", False)
-    demisto.debug(f"Command being called is {params}")
+    demisto.debug(f"params are: {params}")
     incident_collections = params.get("incident_collections", [])
     incident_severity = params.get("incident_severity", [])
 
@@ -1396,12 +1396,13 @@ def main():
         args = demisto.args()
 
         if demisto.command() == "test-module":
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             return_results(test_response(client, "GET", url, token))
 
         elif demisto.command() == "fetch-incidents":
             last_run = demisto.getLastRun()
-
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             data, next_run = cyble_events(
                 client, "POST", token, url, args, last_run, hide_cvv_expiry, incident_collections, incident_severity, False
@@ -1411,22 +1412,27 @@ def main():
             demisto.incidents(data)
 
         elif demisto.command() == "update-alert-data":
+            demisto.debug(f"command being called is: {demisto.command()}")
             return_results(update_alert_data_command(client, base_url, token, args))
 
         elif demisto.command() == "get-mapping-fields":
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             return_results(get_mapping_fields(client, token, url))
 
         elif demisto.command() == "cyble-vision-subscribed-services":
+            demisto.debug(f"command being called is: {demisto.command()}")
             return_results(fetch_subscribed_services_alert(client, "GET", base_url, token))
 
         elif demisto.command() == "cyble-vision-fetch-iocs":
+            demisto.debug(f"command being called is: {demisto.command()}")
             validate_iocs_input(args)
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             command_results = cyble_fetch_iocs(client, "GET", token, args, url)
             return_results(command_results)
 
         elif demisto.command() == "cyble-vision-fetch-alerts":
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             lst_alerts = cyble_events(
                 client, "POST", token, url, args, {}, hide_cvv_expiry, incident_collections, incident_severity, True
@@ -1441,17 +1447,16 @@ def main():
             )
 
         elif demisto.command() == "get-modified-remote-data":
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             return_results(
                 get_modified_remote_data_command(
                     client, url, token, args, hide_cvv_expiry, incident_collections, incident_severity
                 )
             )
-        elif demisto.command() == "update-alert-data":
-            url = base_url + "/y/tpi/cortex/alerts"
-            return_results(update_alert_data_command(client, url, token, args))
 
         elif demisto.command() == "get-remote-data":
+            demisto.debug(f"command being called is: {demisto.command()}")
             url = base_url + str(ROUTES[COMMAND[demisto.command()]])
             return_results(
                 get_remote_data_command(client, url, token, args, incident_collections, incident_severity, hide_cvv_expiry)
