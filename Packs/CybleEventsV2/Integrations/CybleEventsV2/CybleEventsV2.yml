@@ -71,11 +71,11 @@ configuration:
     type: 8
     required: false
     section: Collect
-  - display: First fetch time (by days)
+  - display: First fetch time (in hours)
     name: first_fetch_timestamp
     required: false
     type: 0
-    additionalinfo: Time interval for first fetch (retroactive), by days only. Maximum of 7 days for retroactive value is allowed.
+    additionalinfo: Time interval for first fetch (retroactive), by hours only. Maximum of 3 hours for retroactive value is allowed.
     defaultvalue: '1'
     section: Collect
   - display: Hide Card Details
